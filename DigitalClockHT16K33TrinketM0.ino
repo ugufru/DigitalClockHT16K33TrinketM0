@@ -16,7 +16,7 @@ int ss = 0;
 
 void setup()
 {
-  //  initSerial();
+  initSerial();
   initRTC();
   initDisplay();
 }
@@ -37,7 +37,11 @@ void initSerial()
 
 void initRTC()
 {
+  Serial.print("Hello RTC...");
+  
   if (rtc.begin() == false) error();
+
+  Serial.println("Got RTC");
 
   if (! rtc.initialized() || rtc.lostPower()) error();
   //  {
@@ -57,7 +61,7 @@ void initRTC()
 
   // When time needs to be re-set on a previously configured device, the
   // following line sets the RTC to the date & time this sketch was compiled
-  // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   // This line sets the RTC with an explicit date & time, for example to set
   // January 21, 2014 at 3am you would call:
   // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
@@ -80,6 +84,7 @@ void initDisplay()
 void loop()
 {
   updateTime();
+  delay(100);
 }
 
 void updateTime()
@@ -93,12 +98,12 @@ void updateTime()
 
   if (h == 0) h = 12;
 
-  //  Serial.print(", h = ");
-  //  Serial.print(h);
-  //  Serial.print(", m = ");
-  //  Serial.print(m);
-  //  Serial.print(", s = ");
-  //  Serial.println(s);
+  Serial.print(", h = ");
+  Serial.print(h);
+  Serial.print(", m = ");
+  Serial.print(m);
+  Serial.print(", s = ");
+  Serial.println(s);
 
   // Draw the clock face.
 
