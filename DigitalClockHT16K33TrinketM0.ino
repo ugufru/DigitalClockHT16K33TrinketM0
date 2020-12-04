@@ -19,9 +19,9 @@ RTC_PCF8523 rtc;
 void setup()
 {
   initSerial();
-  initNeoPixels();
   initRTC();
-  initDisplay();
+  initDotStar();
+  init7SegmentDisplay();
 }
 
 void error(char* message)
@@ -52,34 +52,26 @@ void initSerial()
   Serial.println("Serial open...");
 }
 
-void initNeoPixels()
+void initDotStar()
 {
   dotstar.begin();
   dotstar.show();
   dotstar.setBrightness(DOTSTAR_BRIGHTNESS);
-
-  Serial.println("Initialized dotstar.");
+  Serial.println("Trinket DotStar initialized.");
 }
 
 void initRTC()
 {
   if (rtc.begin() == false) error("Could not initialize RTC.");
-
-  Serial.println("Something, something...");
-  Serial.print("rtc.initialized() = ");
-  Serial.println(rtc.initialized());
-  Serial.print("rtc.lostPower() = ");
-  Serial.println(rtc.lostPower());
+  if (rtc.initialized()) Serial.print("PCF8523 RTC initialized.");
+  if (rtc.lostPower()) Serial.print("PCF8523 RTC lost power.");
 
   if (! rtc.initialized() || rtc.lostPower())
   {
-    //   Serial.println("RTC is NOT initialized, let's set the time!");
+    Serial.println("RTC is NOT initialized, let's set the time!");
     // When time needs to be set on a new device, or after a power loss, the
     // following line sets the RTC to the date & time this sketch was compiled
     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    // This line sets the RTC with an explicit date & time, for example to set
-    // January 21, 2014 at 3am you would call:
-    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
     //
     // Note: allow 2 seconds after inserting battery or applying external power
     // without battery before calling adjust(). This gives the PCF8523's
@@ -101,7 +93,7 @@ void initRTC()
   Serial.println("Initialized RTC.");
 }
 
-void initDisplay()
+void init7SegmentDisplay()
 {
   matrix.begin(0x70);
   matrix.setBrightness(8);
