@@ -8,6 +8,8 @@
 #include "Adafruit_LEDBackpack.h"
 #include "RTClib.h"
 
+#define LEFT_BUTTON_PIN 3
+#define RIGHT_BUTTON_PIN 4
 #define DOTSTAR_DATA_PIN 7
 #define DOTSTAR_CLOCK_PIN 8
 #define DOTSTAR_BRIGHTNESS 255
@@ -19,12 +21,13 @@ RTC_PCF8523 rtc;
 void setup()
 {
   initSerial();
+  initButtons();
   initRTC();
   initDotStar();
   init7SegmentDisplay();
 }
 
-void error(char* message)
+void error(const char* message)
 {
   matrix.printError();
   matrix.writeDisplay();
@@ -50,6 +53,14 @@ void initSerial()
   while (!Serial && millis() < timesup);
 
   Serial.println("Serial open...");
+}
+
+void initButtons()
+{
+  pinMode(LEFT_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(RIGHT_BUTTON_PIN, INPUT_PULLUP);
+  
+  Serial.println("Initialized buttons.");
 }
 
 void initDotStar()
@@ -82,13 +93,6 @@ void initRTC()
   // When time needs to be re-set on a previously configured device, the
   // following line sets the RTC to the date & time this sketch was compiled
   //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  // This line sets the RTC with an explicit date & time, for example to set
-  // January 21, 2014 at 3am you would call:
-  // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-
-  // When the RTC was stopped and stays connected to the battery, it has
-  // to be restarted by clearing the STOP bit. Let's do this to ensure
-  // the RTC is running.
   rtc.start();
   Serial.println("Initialized RTC.");
 }
@@ -105,8 +109,10 @@ void init7SegmentDisplay()
 uint8_t previousState = -1;
 
 void loop()
-{
+{  
   DateTime now = rtc.now();
+
+  now = checkButtons(now);
 
   uint8_t state = now.second() % 2;
 
@@ -114,25 +120,55 @@ void loop()
   {
     Serial.println(now.timestamp());
 
-    switch (state)
-    {
-      case 0:
-        displayTime(now);
-        break;
-      case 1:
-        displayTime(now);
-        break;
-    }
+    displayTime(now);
 
-    uint32_t color = Wheel(now.second() * 4.2);
-    color = dotstar.gamma32(color);
-    dotstar.setPixelColor(0, color);
-    dotstar.show();
+//    uint32_t color = Wheel(now.second() * 4.2);
+//    color = dotstar.gamma32(color);
+//    dotstar.setPixelColor(0, color);
+//    dotstar.show();
 
     previousState = state;
   }
 
-  delay(100);
+  delay(200);
+}
+
+DateTime checkButtons(DateTime now)
+{
+    int year = now.year();
+    int month = now.month();
+    int day = now.day();
+    int hour = now.hour();
+    int minute = now.minute();
+    int second = now.second();
+
+  if (digitalRead(LEFT_BUTTON_PIN) == LOW)
+  {
+    Serial.println("LEFT BUTTON");
+
+    hour = (hour + 1) % 24;
+    
+    now = DateTime(year, month, day, hour, minute, second);
+
+    rtc.adjust(now);
+
+    displayTime(now);
+  }
+
+  if (digitalRead(RIGHT_BUTTON_PIN) == LOW)
+  {
+    Serial.println("RIGHT BUTTON");  
+
+    minute = (minute + 1) % 60;
+
+    now = DateTime(year, month, day, hour, minute, second);
+
+    rtc.adjust(now);
+
+    displayTime(now); 
+}
+
+  return (now);
 }
 
 void displayTime(DateTime now)
